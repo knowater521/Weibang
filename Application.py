@@ -35,6 +35,8 @@ class Weibnag:
         self.password = password
 
     def login(self):
+        print('  [INFO] simulate login from web')
+
         username_encrypt = crypt(self.username, 'h8uJk2U8ew9H17ycbN6gH0c8Lmn6Ko2p')
         passwd__encrypt = hashlib.sha1(self.password.encode()).hexdigest()
 
@@ -49,7 +51,7 @@ class Weibnag:
         }
 
         self.s.post('http://weibang.youth.cn/public/web/service/webmanager/dispatchByWebBrowser',
-                    data={'host': 'weibang.youth.cn', 'port': '80', 'username': raw_username})
+                    data={'host': 'weibang.youth.cn', 'port': '80', 'username': self.username})
         userinfo = self.s.post("http://weibang.youth.cn/public/web/service/webmanager/login_safe", data=data).json()
 
         userinfo = json.loads(userinfo)
@@ -57,17 +59,17 @@ class Weibnag:
         self.token = userinfo['data']['access_token']
 
     def websocket(self):
+        print('  [INFO] simulate websocket')
+
         socket_detail = requests.get('http://123.103.5.50:9056/socket.io/1/?t=%d' % time.time() * 1000).text
         wsurl = 'ws://123.103.5.50:9056/socket.io/1/websocket/' + socket_detail.split(':')[0]
         ws = create_connection(wsurl)
         ws.send(
             '''3:::{"id":2,"route":"connector.entryHandler.connect","msg":{"uid":"%s","username":"%s","token":"%s","version":"","sockettype":"websocketio","device_type":"4","device_token":"","unit_type":"web"}}''' % (
-                uid, raw_username, token))
-        print(ws.recv())
+                self.uid, self.username, self.token))
         ws.send(
             """3:::{"id":3,"route":"api.systemHandler.getUserDetail","msg":{"my_uid":"%s","user_detail_sync_tag":"","token":"%s"}}""" % (
                 self.uid, self.token))
-        print(ws.recv())
         ws.send("""3:::{"id":4,"route":"api.orgHandler.get_org_list","msg":{"my_uid":"%s","opt_uid":"%s","token":"%s"}}
         """ % (self.uid, self.uid, self.token))
         ws.send("""3:::{"id":5,"route":"api.systemHandler.getUserDetail","msg":{"my_uid":"%s","user_detail_sync_tag":"","token":"%s"}}
@@ -77,11 +79,16 @@ class Weibnag:
         ws.send(
             """3:::{"id":7,"route":"api.orgHandler.get_org_list","msg":{"my_uid":"%s","opt_uid":"%s","token":"%s"}}""" % (
                 self.uid, self.uid, self.token))
-        print(ws.recv())
-        print(ws.recv())
-        print(ws.recv())
+        ws.recv()
+        ws.recv()
+        ws.recv()
+        ws.recv()
+        ws.recv()
+
+        ws.close()
 
     def extra_req(self):
+        print('  [INFO] simulate extra_req')
         self.s.get('http://weibang.youth.cn/public/web/service/webmanager/getSiteType')
 
     def reg(self):
