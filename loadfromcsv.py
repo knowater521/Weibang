@@ -1,4 +1,5 @@
 from Application import Weibnag
+from Expection import LoginFail
 import csv
 
 
@@ -19,13 +20,13 @@ def main():
             pwd = row[3]
             if not phone.isdigit():
                 continue
-            print('Doing:',name)
             try:
-                x = Weibnag(half_width(phone),half_width(pwd))
+                x = Weibnag(half_width(phone), half_width(pwd))
                 x.reg()
-            except:
-                print('Error:',name,phone,pwd)
-                pass
+            except LoginFail:
+                print("\033[1;31;40m")
+                print('Error:', name, phone, pwd)
+                print("\033[0m")
         print('All Done')
 
 
