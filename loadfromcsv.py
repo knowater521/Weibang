@@ -22,10 +22,10 @@ def main():
                 continue
             try:
                 x = Weibnag(half_width(phone), half_width(pwd))
-                x.reg()
+                x.bind_user_area()
             except LoginFail:
-                print("\033[1;31;40m")
-                print('Error:', name, phone, pwd)
+                print(row)
+                print('\033[1;31;40mError:', name, phone, pwd)
                 print("\033[0m")
         print('All Done')
 

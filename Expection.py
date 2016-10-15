@@ -1,1 +1,2 @@
-LoginFail = Exception("登录失败")
+class LoginFail(Exception):
+    pass
