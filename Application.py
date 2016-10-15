@@ -4,33 +4,9 @@ import json
 import time
 from websocket import create_connection
 from Expection import LoginFail
-debugLevel = 1
-
-
-def crypt(data, key):
-    """RC4 algorithm"""
-    x = 0
-    box = list(range(256))
-    for i in range(256):
-        x = (x + box[i] + ord(key[i % len(key)])) % 256
-        box[i], box[x] = box[x], box[i]
-    x = y = 0
-    out = []
-    for char in data:
-        x = (x + 1) % 256
-        y = (y + box[x]) % 256
-        box[x], box[y] = box[y], box[x]
-        out.append(chr(ord(char) ^ box[(box[x] + box[y]) % 256]))
-
-    return ''.join(out)
-
-
-def log(msg, level=1, color=False):
-    if level > debugLevel:
-        if color:
-            print("\033[1;33;40m" + msg + "\033[0m")
-        else:
-            print(msg)
+import config
+import strings
+from tools import crypt, log
 
 
 class Weibnag:
@@ -42,8 +18,7 @@ class Weibnag:
     young_token = ''
     s = requests.session()
     young = requests.session()
-    header = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_0_2 like Mac OS X) AppleWebKit/602.1.50\
-                            (KHTML, like Gecko) Mobile/14A456"}
+    header = {"User-Agent": config.user_agent}
     young.headers = header
     s.headers = header
     debug = True
@@ -91,47 +66,29 @@ class Weibnag:
         ws = create_connection(wsurl)
         log(ws.recv())
 
-        ws.send(
-            '''3:::{"id":2,"route":"connector.entryHandler.connect","msg":{"uid":"%s","username":"%s","token":"%s",
-            "version":"","sockettype":"websocketio","device_type":"4","device_token":"","unit_type":"web"}}'''
-            % (self.uid, self.username, self.token))
+        ws.send(strings.ws_string1 % (self.uid, self.username, self.token))
         log(ws.recv())
 
         if first_time:
-            ws.send(
-                """3:::{"id":3,"route":"api.systemHandler.getUserDetail","msg":{"my_uid":"%s","user_detail_sync_tag":
-                "","token":"%s"}}"""
-                % (self.uid, self.token))
+            ws.send(strings.ws_string2 % (self.uid, self.token))
             log(ws.recv())
 
-            ws.send(
-                """3:::{"id":4,"route":"api.orgHandler.get_org_list","msg":{"my_uid":"%s","opt_uid":"%s","token":"%s"}}
-                """ % (self.uid, self.uid, self.token))
+            ws.send(strings.ws_string3% (self.uid, self.uid, self.token))
             log(ws.recv())
 
-            ws.send(
-                """3:::{"id":5,"route":"api.systemHandler.getUserDetail","msg":{"my_uid":"%s","user_detail_sync_tag":"",
-                "token":"%s"}}"""
-                % (self.uid, self.token))
+            ws.send(strings.ws_string4 % (self.uid, self.token))
             log(ws.recv())
 
-            ws.send("""3:::{"id":6,"route":"api.systemHandler.getBrandNewConversation","msg":{"my_uid":"%s","opt_uid":"%s",
-                "token":"%s"}}"""
-                    % (self.uid, self.uid, self.token))
+            ws.send(strings.ws_string5 % (self.uid, self.uid, self.token))
             log(ws.recv())
 
-            ws.send(
-                """3:::{"id":7,"route":"api.orgHandler.get_org_list","msg":{"my_uid":"%s","opt_uid":"%s","token":"%s"}}
-                """ % (self.uid, self.uid, self.token))
-
+            ws.send(strings.ws_string5 % (self.uid, self.uid, self.token))
             log(ws.recv())
 
         log(ws.recv())
 
         # get the url of young voice with token
-        data = """3:::{"id":8,"route":"api.qnzsUserHandler.getQnzsChildUrl","msg":{"my_uid":"%s","share_url":
-                "http://sns.qnzs.youth.cn/?token=","token":"%s"}}""" \
-               % (self.uid, self.token)
+        data = strings.ws_getvoice % (self.uid, self.token)
 
         ws.send(data)
         data = ws.recv()
@@ -155,11 +112,10 @@ class Weibnag:
     def check_voice_login(self,check_org=False):
         res = self.young.get(self.young_voice_url)
         res.encoding = 'utf-8'
-        if res.text.find('我的提问')!=-1:
+        if res.text.find('我的提问') != -1:
             if check_org:
                 # 检测是否为正确的分区
-                if res.text.find('2014级计算机2班') != -1:
-
+                if res.text.find(config.org_name) != -1:
                     return True
             else:
                 return True
@@ -172,15 +128,13 @@ class Weibnag:
 
         log(self.young_voice_url, 2)
 
-        # 事先抓取学院数据填入
-        post_data = """token={}&controller=index&action=index&area_sel%5B1%5D=25414&area_sel%5B2%5D=67499&area_sel%5B3%5D=105794&area_sel%5B4%5D=142964&area_sel%5B5%5D=144714&area_sel%5B6%5D=145809&area_level=6""".format(self.young_token)
+        post_data = config.org_switch_data.format(token=self.young_token)
 
-        header = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 10_0_2 like Mac OS X)",
-                  "Accept":'application/json, text/javascript, */*; q=0.01',
-                  "X-Requested-With": "XMLHttpRequest",
-                    "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",
-                  "Referer": "http://sns.qnzs.youth.cn/index/index/token/%s/limit" % self.young_token
-                  }
+        header = {
+            "User-Agent": config.user_agent,
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": "http://sns.qnzs.youth.cn/index/index/token/%s/limit" % self.young_token
+        }
         res = self.young.post('http://sns.qnzs.youth.cn/ajax/changearea/token/' + self.young_token, data=post_data,
                               headers=header).json()
         log(res)

@@ -1,2 +1,4 @@
 __pycache__
 user.csv
+.idea
+config.py

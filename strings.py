@@ -1,0 +1,6 @@
+ws_string1 = """3:::{"id":2,"route":"connector.entryHandler.connect","msg":{"uid":"%s","username":"%s","token":"%s","version":"","sockettype":"websocketio","device_type":"4","device_token":"","unit_type":"web"}}"""
+ws_string2 = """3:::{"id":3,"route":"api.systemHandler.getUserDetail","msg":{"my_uid":"%s","user_detail_sync_tag":"","token":"%s"}}"""
+ws_string3 = """3:::{"id":4,"route":"api.orgHandler.get_org_list","msg":{"my_uid":"%s","opt_uid":"%s","token":"%s"}}"""
+ws_string4 = """3:::{"id":5,"route":"api.systemHandler.getUserDetail","msg":{"my_uid":"%s","user_detail_sync_tag":"","token":"%s"}}"""
+ws_string5 = """3:::{"id":6,"route":"api.systemHandler.getBrandNewConversation","msg":{"my_uid":"%s","opt_uid":"%s","token":"%s"}}"""
+ws_getvoice = """3:::{"id":8,"route":"api.qnzsUserHandler.getQnzsChildUrl","msg":{"my_uid":"%s","share_url": "http://sns.qnzs.youth.cn/?token=","token":"%s"}}"""
