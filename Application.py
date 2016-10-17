@@ -91,10 +91,16 @@ class Weibnag:
         data = strings.ws_getvoice % (self.uid, self.token)
 
         ws.send(data)
-        data = ws.recv()
-        log(data)
+        data_recv = ws.recv()
+        log(data_recv)
 
-        json_data = json.loads(data[4:])
+        json_data = json.loads(data_recv[4:])
+        if "id" not in json_data or json_data["id"] != 8:
+            ws.send(data)
+            data_recv = ws.recv()
+            log(data_recv)
+            json_data = json.loads(data_recv[4:])
+
         young_voice_url = json_data["body"]["data"]["url"]
         self.young_voice_url = young_voice_url
         self.young_token = young_voice_url.split('=')[-1]
@@ -119,6 +125,7 @@ class Weibnag:
                     return True
             else:
                 return True
+        log(res.text)
         return False
 
     def bind_user_area(self):
@@ -133,6 +140,7 @@ class Weibnag:
         header = {
             "User-Agent": config.user_agent,
             "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "Referer": "http://sns.qnzs.youth.cn/index/index/token/%s/limit" % self.young_token
         }
         res = self.young.post('http://sns.qnzs.youth.cn/ajax/changearea/token/' + self.young_token, data=post_data,
