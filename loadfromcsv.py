@@ -1,30 +1,23 @@
 from Application import Weibnag
 from Expection import LoginFail
+from tools import half_width
 import csv
 import sqlite3
 
-FULL2HALF = dict((i + 0xFEE0, i) for i in range(0x21, 0x7F))
-FULL2HALF[0x3000] = 0x20
-
-
-
-
-def half_width(s):
-    return str(s).translate(FULL2HALF)
 
 
 def init_database():
     conn = sqlite3.connect('data.db')
     cursor = conn.cursor()
     cursor.execute("""
-    CREATE table if not exists "Account" (
-    `username` VARCHAR(20) NOT NULL ,
-    `password` VARCHAR(20) NOT NULL ,
-    `young_token` VARCHAR(20)  DEFAULT '' ,
-    `expire` INT  DEFAULT '0' ,
-    `posts` INT  DEFAULT '0'  ,
-    `replys` INT  DEFAULT '0'
-    )
+    CREATE TABLE Account
+    (
+        name INTEGER,
+        username TEXT,
+        password TEXT,
+        young_token TEXT,
+        type INTEGER
+    );
     """)
     conn.commit()
     cursor.close()
@@ -44,16 +37,30 @@ def check_and_insert_database():
                 continue
             try:
                 x = Weibnag(half_width(phone), half_width(pwd))
-                x.websocket()
-                cursor.execute("INSERT INTO 'Account' VALUES ({},{},{},0,0,0)".format(x.username, x.password, x.young_token))
+                x.login()
+                x.websocket(False)
+                cursor.execute("INSERT INTO 'Account' VALUES ('{}','{}','{}','{}',0)"
+                               .format(name, x.username, x.password, x.young_token))
                 conn.commit()
             except LoginFail:
                 print(row)
                 print('\033[1;31;40mError:', name, phone, pwd)
                 print("\033[0m")
         print('All Done')
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+
+def read_from_sql():
+    conn = sqlite3.connect('data.db')
+    cursor = conn.cursor()
+    lists = cursor.execute("SELECT * FROM Account").fetchall()
+    print(lists)
+    for each in lists:
+        x = Weibnag(each[0], each[1], each[2])
+        x.bind_user_area()
 
 
 if __name__ == '__main__':
-    # init_database()
-    main()
+    pass

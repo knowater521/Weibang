@@ -25,3 +25,12 @@ def log(msg, level=1, color=False):
             print("\033[1;33;40m" + msg + "\033[0m")
         else:
             print(msg)
+
+
+FULL2HALF = dict((i + 0xFEE0, i) for i in range(0x21, 0x7F))
+FULL2HALF[0x3000] = 0x20
+
+
+def half_width(s):
+    return str(s).translate(FULL2HALF)
+
