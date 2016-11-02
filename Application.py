@@ -25,10 +25,13 @@ class Weibnag:
     s.headers = header
     debug = True
 
-    def __init__(self, username, password):
+    def __init__(self, username='', password='', young_token=None):
         log('[INFO] user ' + username, 2, True)
         self.username = username
         self.password = password
+        if young_token:
+            self.young_token = young_token
+            self.young_voice_url = "http://sns.qnzs.youth.cn/?token=" + young_token
 
     def login(self):
         log('[INFO] simulate login from web', 2, True)
