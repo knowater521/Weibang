@@ -6,6 +6,7 @@ from websocket import create_connection
 from Expection import LoginFail
 import config
 import strings
+import re
 from tools import crypt, log
 
 
@@ -16,6 +17,7 @@ class Weibnag:
     token = ''
     young_voice_url = ''
     young_token = ''
+    selectedid = ''
     s = requests.session()
     young = requests.session()
     header = {"User-Agent": config.user_agent}
@@ -73,7 +75,7 @@ class Weibnag:
             ws.send(strings.ws_string2 % (self.uid, self.token))
             log(ws.recv())
 
-            ws.send(strings.ws_string3% (self.uid, self.uid, self.token))
+            ws.send(strings.ws_string3 % (self.uid, self.uid, self.token))
             log(ws.recv())
 
             ws.send(strings.ws_string4 % (self.uid, self.token))
@@ -115,9 +117,13 @@ class Weibnag:
         self.login()
         self.websocket(True)
 
-    def check_voice_login(self,check_org=False):
+    def check_voice_login(self, check_org=False):
+        print("check_voice_login")
         res = self.young.get(self.young_voice_url)
+
+        self.selectedid = res.url.split('/')[6]
         res.encoding = 'utf-8'
+        print(res.text)
         if res.text.find('我的提问') != -1:
             if check_org:
                 # 检测是否为正确的分区
@@ -152,6 +158,36 @@ class Weibnag:
         else:
             log("[ERROR]%s切换失败" % self.username, 10, True)
             log(res)
+
+
+    def post_question(self, title, content):
+        if not self.check_voice_login():
+            log("[ERROR]%s区域不正确" % self.username, 10, True)
+            raise LoginFail("")
+        res = self.young.get(
+            "http://sns.qnzs.youth.cn/question/ask/token/{}/selectedid/{}/limit/0".format(self.young_token,
+                                                                                          self.selectedid))
+        res.encoding = 'utf-8'
+
+        post_data = {"ques[title]": title,
+                     "tags[]": "青年交流",
+                     "ques[desc]": content}
+        result = re.findall('<input type="hidden" name="([^"]+)" value="([^"]+)">', res.text, re.S)
+        for item in result:
+            post_data.update({item[0]: item[1]})
+
+        header = {
+            "User-Agent": config.user_agent,
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept":"application/json, text/javascript, */*; q=0.01",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "Referer": "http://sns.qnzs.youth.cn/question/ask/token/{}/selectedid/{}/limit/0".format(self.young_token,self.selectedid)
+        }
+        result = self.young.post("http://sns.qnzs.youth.cn/ajax/quessave/token/{}".format(self.young_token), data=post_data,
+                               headers=header).json()
+        log(result)
+
+        pass
 
 
 if __name__ == "__main__":
