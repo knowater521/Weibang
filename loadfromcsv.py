@@ -78,7 +78,6 @@ def post_question_with_json():
     cursor.execute("SELECT username,password,young_token,name FROM Account ")
     tokens = cursor.fetchall()
 
-    print(tokens)
     with open('questions.json', encoding='utf-8') as q:
         data = json.load(q)
         for que in data:
@@ -88,9 +87,7 @@ def post_question_with_json():
 
             chosen = rand(tokens)
             print(chosen)
-            tmp = Weibnag(chosen[0], chosen[1])
-            tmp.young_token = chosen[2]
-            tmp.young_voice_url = "http://sns.qnzs.youth.cn/?token=" + chosen[2]
+            tmp = Weibnag(chosen[0], chosen[1], chosen[2])
             tmp.post_question(title, content)
 
     cursor.close()

@@ -4,3 +4,6 @@ user.csv
 config.py
 data.db
 zhihu
+question_his
+questions.json
+run.py
