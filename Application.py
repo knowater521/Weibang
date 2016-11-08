@@ -199,10 +199,15 @@ class Weibnag:
         if result["err"] != 0:
             logging.warning("提问失败！！" + result["msg"] + " " + title)
             if result["err"] == 2:
-                logging.INFO("重试提问。")
-                self.post_question(title + "求大家分享，谢谢。", content + "大家说说自己的看法吧。")
+                logging.info("重试提问。")
+                return self.post_question(title + "求大家分享，谢谢。", content + "大家说说自己的看法吧。")
+            if result["msg"].find('5秒') != -1:
+                time.sleep(5)
+                return self.post_question(title + "求大家分享，谢谢。", content + "大家说说自己的看法吧。")
+            return False
         else:
             logging.info("提问成功")
+            return True
 
         logging.debug(result)
 

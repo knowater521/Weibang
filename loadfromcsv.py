@@ -77,7 +77,7 @@ def post_question_with_json():
     cursor = conn.cursor()
     cursor.execute("SELECT username,password,young_token,name FROM Account ")
     tokens = cursor.fetchall()
-
+    success = 0
     with open('questions.json', encoding='utf-8') as q:
         data = json.load(q)
         for que in data:
@@ -88,8 +88,10 @@ def post_question_with_json():
             chosen = rand(tokens)
             print(chosen)
             tmp = Weibnag(chosen[0], chosen[1], chosen[2])
-            tmp.post_question(title, content)
-
+            x = tmp.post_question(title, content)
+            if x:
+                success += 1
+                print(success)
     cursor.close()
     conn.close()
 
