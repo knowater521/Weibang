@@ -19,20 +19,29 @@ def login_zhihu():
 
 
 def get_zhihu_topic(topic_id):
+    idarray = []
     client.load_token('token.pkl')
     topic = client.topic(topic_id)
     questions = []
     i = 0
     for ans in topic.best_answers:
-        i += 1
         title = ans.question.title
         detail = ans.question.detail
+        qid = ans.question.id
+        if qid in idarray:
+            print("dup")
+            continue
+        idarray.append(qid)
+        i += 1
         re.sub(r'</?\w+[^>]*>', '', detail)
         re.sub(r'知乎', '青年之声', detail)
         if detail == "" or len(detail) > 30:
-            detail = "请大家一起分享一下。谢谢啦"
+            detail = title
+
         questions.append({'question': title, 'answer': detail})
-        if i > 70:
+        print(i)
+        if i > 250:
             break
 
     print(json.dumps(questions))
+
