@@ -9,6 +9,7 @@ import strings
 import re
 import logging
 from tools import crypt
+from bs4 import BeautifulSoup
 
 logging.basicConfig(level=logging.INFO,
                     format='[%(levelname)s] %(message)s'
@@ -210,6 +211,56 @@ class Weibnag:
             return True
 
         logging.debug(result)
+
+    def get_noreply_list(self):
+        noreply_url = 'http://sns.qnzs.youth.cn/index/noanswer/token/%s/selectedid/142964/limit/0' % self.young_token
+        print(noreply_url)
+        res = self.young.get(noreply_url)
+        res.encoding = 'utf-8'
+        soup = BeautifulSoup(res.text)
+        container = soup.find(id='wap-index-new-ques-list')
+        questions = container.findAll(class_='wap-index-ques-title-txt')
+
+        header = {
+            "User-Agent": config.user_agent,
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "Referer": "http://sns.qnzs.youth.cn/ajax/anssave/token/"
+        }
+
+        for each in questions:
+            title = each.a.text
+            link = each.a.get('href')
+            question_url = 'http://sns.qnzs.youth.cn{}'.format(link)
+            self.young.get(question_url)
+            question_id = link.split('/')[4]
+            selected_id = link.split('/')[8]
+            print(title)
+            answer = self.baidu_search(title)
+
+            post_data = {
+                "change_aid": selected_id,
+                "change_limit": 0,
+                "answer[qid]": question_id,
+                "answer[content]": "<p>%s</p>" % answer
+            }
+
+
+            res = self.young.post('http://sns.qnzs.youth.cn/ajax/anssave/token/%s'%self.young_token,data=post_data,headers=header)
+            print(res.json())
+            time.sleep(20)
+            # return
+
+    baidu = requests.session()
+    def baidu_search(self,text):
+        search = self.baidu.get("http://www.baidu.com/s?wd=%s" % text).text
+        soup = BeautifulSoup(search)
+        res = soup.find(class_='c-abstract')
+        print(res.text)
+        return res.text
+
+
 
 
 if __name__ == "__main__":
